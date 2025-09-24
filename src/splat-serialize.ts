@@ -158,6 +158,10 @@ const getCommonPropNames = (splats: Splat[]) => {
     return [...result];
 };
 
+const getComments = (splats: Splat[]) => {
+    return splats.length === 1 ? splats[0].splatData.comments : [];
+};
+
 const getCommonProps = (splats: Splat[]) => {
     const result = new Map<string, Set<string>>();  // map of name->type
 
@@ -480,6 +484,8 @@ const serializePly = async (splats: Splat[], serializeSettings: SerializeSetting
     // this data is filtered out, as it holds internal editor state
     const internalProps = keepStateData ? ['transform'] : ['state', 'transform'];
 
+    const comments = getComments(splats)
+
     const props = getCommonProps(splats)
     // filter out internal props
     .filter(p => !internalProps.includes(p.name))
@@ -498,6 +504,7 @@ const serializePly = async (splats: Splat[], serializeSettings: SerializeSetting
         // FIXME: disable for now due to other tooling not supporting any header
         // `comment ${generatedByString}`,
         `element vertex ${totalGaussians}`,
+        comments.map(c => `comment ${c}`),
         props.map(p => `property ${p.type} ${p.name}`),
         'end_header',
         ''
