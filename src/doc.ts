@@ -4,6 +4,7 @@ import { DownloadWriter, FileStreamWriter } from './serialize/writer';
 import { ZipWriter } from './serialize/zip-writer';
 import { Splat } from './splat';
 import { serializePly } from './splat-serialize';
+import { Transform } from './transform';
 import { localize } from './ui/localization';
 
 // ts compiler and vscode find this type, but eslint does not
@@ -101,7 +102,7 @@ const registerDocEvents = (scene: Scene, events: Events) => {
                 // construct the splat asset
                 const contents = await zip.file(`splat_${i}.ply`).async('blob');
                 const url = URL.createObjectURL(contents);
-                const splat = await scene.assetLoader.loadModel({
+                const splat = await scene.assetLoader.load({
                     url,
                     filename
                 });
@@ -122,6 +123,16 @@ const registerDocEvents = (scene: Scene, events: Events) => {
             events.invoke('docDeserialize.poseSets', document.poseSets);
             events.invoke('docDeserialize.view', document.view);
             scene.camera.docDeserialize(document.camera);
+
+            // refresh the pivot to reflect the loaded transform
+            const currentSelection = events.invoke('selection');
+            if (currentSelection) {
+                const pivot = events.invoke('pivot');
+                const transform = new Transform();
+                const pivotOrigin = events.invoke('pivot.origin');
+                currentSelection.getPivot(pivotOrigin, false, transform);
+                pivot.place(transform);
+            }
         } catch (error) {
             await events.invoke('showPopup', {
                 type: 'error',

@@ -75,9 +75,12 @@ class Splat extends Element {
     _whitePoint = 1;
     _transparency = 1;
 
+    measurePoints: Vec3[] = [];
+    measureSelection = -1;
+
     rebuildMaterial: (bands: number) => void;
 
-    constructor(asset: Asset) {
+    constructor(asset: Asset, orientation: Vec3) {
         super(ElementType.splat);
 
         const splatResource = asset.resource as GSplatResource;
@@ -90,7 +93,7 @@ class Splat extends Element {
         this.numSplats = splatData.numSplats;
 
         this.entity = new Entity('splatEntitiy');
-        this.entity.setEulerAngles(0, 0, 180);
+        this.entity.setEulerAngles(orientation);
         this.entity.addComponent('gsplat', { asset });
 
         const instance = this.entity.gsplat.instance;
@@ -398,13 +401,6 @@ class Splat extends Element {
         }
 
         this.entity.enabled = this.visible;
-
-        // Temp hack: override the splat viewport size because we're rendering to an offscreen
-        // render target and the engine currently always takes the backbuffer size.
-        // this workaround can be removed once https://github.com/playcanvas/engine/pull/7425 is
-        // available
-        const rt = this.scene.camera.entity.camera.renderTarget;
-        this.entity.gsplat.instance.meshInstance.setParameter('viewport', [rt.width, rt.height]);
     }
 
     focalPoint() {
